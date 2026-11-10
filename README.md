@@ -50,7 +50,8 @@ containers. Then:
 1. Start it, and note the API key it generated: `cat ./subocr/config/api_key`.
 2. In Radarr and Sonarr, add a webhook under **Settings → Connect** pointing at
    `http://subocr:8585/api/v1/webhooks/radarr?apikey=<key>` (or `/sonarr`).
-   See [docs/integrations.md](docs/integrations.md).
+   Step-by-step instructions, including Jellyfin, are in
+   [docs/webhooks.md](docs/webhooks.md).
 3. Leave it running. New imports are handled as they arrive, and a nightly
    scan works through everything that was already in your library.
 
@@ -80,7 +81,8 @@ modified.
 | | |
 | --- | --- |
 | [Configuration](docs/configuration.md) | Every setting, with defaults |
-| [Integrations](docs/integrations.md) | Radarr, Sonarr, Jellyfin and Bazarr |
+| [Webhooks](docs/webhooks.md) | Setting up Radarr, Sonarr and Jellyfin to notify subocr |
+| [Integrations](docs/integrations.md) | How subocr works with Jellyfin, its subtitle plugin, and Bazarr |
 | [Cleanup and the archive](docs/cleanup.md) | Which subtitle files get tidied away, and how to get them back |
 | [API](docs/api.md) | Submitting files, checking jobs, previews |
 | [Troubleshooting](docs/troubleshooting.md) | Permissions on NFS/SMB shares, OCR models, common log messages |

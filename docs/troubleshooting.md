@@ -48,6 +48,7 @@ or build the image with the model baked in (see
 ## Nothing happens on import
 
 - In Radarr/Sonarr, press **Test** on the webhook: you should get a green tick.
+  [webhooks.md](webhooks.md#when-somethings-off) lists what each error means.
 - Check the path in the webhook is inside `LIBRARY_PATHS`. Rejected paths are
   logged with the reason.
 - With `TEXT_MODE=auto`, text tracks are handled `PLUGIN_GRACE_MINUTES` after

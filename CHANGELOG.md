@@ -3,6 +3,10 @@
 All notable changes to subocr are listed here. Versions follow
 [semantic versioning](https://semver.org).
 
+## [0.4.2] - 2026-11-10
+
+Updated Documents.
+
 ## [0.4.1] - 2026-11-09
 
 First public release.

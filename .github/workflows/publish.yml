@@ -3,13 +3,25 @@ name: Publish
 # Runs in the release repository only (repository variable PUBLISH_IMAGE=true).
 # On a version tag: tests, builds and pushes the image to GitHub Container Registry,
 # then creates the GitHub release with the notes from CHANGELOG.md.
+#
+# Can also be started by hand (Actions → Publish → Run workflow) for an existing tag,
+# e.g. if the tag's push event was missed. An existing GitHub release for the tag is
+# left as it is.
 
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to publish, e.g. v0.4.1
+        required: true
 
 permissions:
   contents: read
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   test:
@@ -19,27 +31,34 @@ jobs:
   image:
     name: Build and push image
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
+      - name: Version from the tag
+        id: version
+        run: |
+          case "$TAG" in v[0-9]*) ;; *) echo "::error::$TAG is not a version tag"; exit 1 ;; esac
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable=${{ !contains(github.ref_name, '-') }}
-      - uses: docker/build-push-action@v6
+            type=semver,pattern={{version}},value=${{ steps.version.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.version.outputs.version }}
+            type=raw,value=latest,enable=${{ !contains(env.TAG, '-') }}
+      - uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64
@@ -52,14 +71,16 @@ jobs:
   release:
     name: Create GitHub release
     needs: image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
       - name: Release notes from the changelog
         run: |
-          version="${GITHUB_REF_NAME#v}"
+          version="${TAG#v}"
           awk -v v="$version" '
             $0 ~ "^## \\[" v "\\]" { found = 1; next }
             found && /^## \[/ { exit }
@@ -74,7 +95,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; leaving it as it is."
+            exit 0
+          fi
           flags=""
-          case "$GITHUB_REF_NAME" in *-*) flags="--prerelease" ;; esac
-          gh release create "$GITHUB_REF_NAME" --title "subocr $GITHUB_REF_NAME" \
-            --notes-file notes.md --verify-tag $flags
+          case "$TAG" in *-*) flags="--prerelease" ;; esac
+          gh release create "$TAG" --title "subocr $TAG" --notes-file notes.md --verify-tag $flags
