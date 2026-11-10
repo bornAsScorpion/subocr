@@ -1,0 +1,27 @@
+# subocr next to Radarr, Sonarr and Bazarr.
+#
+# Mount your media at the same path the *arr containers use (here /data), so the file
+# paths in their webhooks work as they are. See docs/configuration.md for every setting.
+services:
+  subocr:
+    image: ghcr.io/bornasscorpion/subocr:latest
+    container_name: subocr
+    environment:
+      - PUID=1000                       # same user and group as your *arr containers
+      - PGID=1000
+      - TZ=Etc/UTC
+      - LIBRARY_PATHS=/data/movies,/data/tv
+      - LANGUAGES=en                    # e.g. en,de: models for extra languages download on first start
+      - CLEANUP_MODE=dry-run            # report only; switch to archive once the preview looks right
+      # - API_KEY=${SUBOCR_API_KEY}     # leave unset to have one generated into /config/api_key
+      # - PATH_MAPPINGS=/media:/data    # if Jellyfin sees the library at /media
+      # - JELLYFIN_URL=http://jellyfin:8096
+      # - JELLYFIN_API_KEY=${JELLYFIN_API_KEY}
+    volumes:
+      - ./subocr/config:/config         # database, API key, OCR models
+      - ./subocr/archive:/archive       # archived subtitles; keep it outside your libraries
+      - /path/to/media:/data            # the same mount Radarr and Sonarr use
+      - /var/tmp/subocr:/scratch        # local disk for temporary OCR work
+    ports:
+      - 8585:8585
+    restart: unless-stopped

@@ -1,0 +1,36 @@
+name: Bug report
+description: Something isn't working as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you expected, and what happened instead.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: subocr version
+      placeholder: "0.4.0 (image tag, or GET /api/v1/system/status)"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant lines from `docker logs subocr`. Please remove API keys.
+      render: text
+  - type: textarea
+    id: probe
+    attributes:
+      label: Probe output
+      description: For a problem with a specific file, the output of `docker exec subocr subocr probe "/path/to/file.mkv"`.
+      render: text
+  - type: textarea
+    id: setup
+    attributes:
+      label: Setup
+      description: Your compose service (without keys), and how the media is mounted (local disk, NFS, SMB).
+      render: yaml

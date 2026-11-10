@@ -1,0 +1,33 @@
+name: Image check
+
+# Builds the image (without pushing) when something that affects it changes, so a
+# broken Dockerfile shows up before release day.
+on:
+  pull_request:
+    paths: [Dockerfile, docker-entrypoint.sh, pyproject.toml, .dockerignore]
+  push:
+    branches: [main]
+    paths: [Dockerfile, docker-entrypoint.sh, pyproject.toml, .dockerignore]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: subocr:check
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke test
+        run: |
+          docker run --rm subocr:check --version
+          docker run --rm subocr:check models | grep -qx eng

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Troubleshooting guide
+    url: https://github.com/bornAsScorpion/subocr/blob/main/docs/troubleshooting.md
+    about: Permissions on NAS shares, OCR models and other common questions.
